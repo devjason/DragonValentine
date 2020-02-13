@@ -8,6 +8,7 @@ const int EYE_TIME = 500;
 const int FAST_EYE_TIME = 250;
 bool lightEyes = true;
 unsigned long lastEyeTime = 0;
+unsigned long targetEyeTime = EYE_TIME;
 
 const int IR_IN = 7;
 IRrecv irRecv(IR_IN);
@@ -37,7 +38,7 @@ void loop() {
   unsigned long now = millis();
   digitalWrite(LEFT_EYE, lightEyes ? HIGH : LOW);
   digitalWrite(RIGHT_EYE, lightEyes ? HIGH : LOW);
-  if ((now - lastEyeTime) > EYE_TIME) {
+  if ((now - lastEyeTime) > targetEyeTime) {
     lightEyes = !lightEyes;
     lastEyeTime = now;
   }
@@ -47,37 +48,43 @@ void loop() {
     switch(results.value) {
       case 0xFFE01F:
         Serial.println("Tail left");
-        tail.write(180);
+        tail.write(135);
         tailStart = now;
+        targetEyeTime = FAST_EYE_TIME;
         break;
       case 0xFFA857:
         Serial.println("Tail right");
-        tail.write(0);
+        tail.write(45);
         tailStart = now;
+        targetEyeTime = FAST_EYE_TIME;
         break;
       case 0xFF22DD:
         Serial.println("Neck left");
-        neck.write(180);
+        neck.write(160);
         neckStart = now;
+        targetEyeTime = FAST_EYE_TIME;
         break;
       case 0xFF02FD:
         Serial.println("Tail right");
-        neck.write(0);
+        neck.write(30);
         neckStart = now;
+        targetEyeTime = FAST_EYE_TIME;
         break;
     }
     irRecv.resume();
   }
 
-  if ((tailStart > 0) && (now - tailStart) > 500) {
+  if ((tailStart > 0) && (now - tailStart) > 750) {
     tail.write(90);
     tailStart = 0;
+    targetEyeTime = EYE_TIME;
     Serial.println("Tail Halted");
   }
 
-  if ((neckStart > 0) && (now - neckStart) > 500) {
+  if ((neckStart > 0) && (now - neckStart) > 750) {
     neck.write(90);
     neckStart = 0;
+    targetEyeTime = EYE_TIME;
     Serial.println("Neck Halted");
   }
 }
